@@ -118,3 +118,30 @@ customer_birthday= t.customer_birthday, load_dttm = current_timestamp
 WHEN NOT MATCHED THEN
   INSERT (customer_name, customer_address, customer_birthday, customer_email, load_dttm)
   VALUES (t.customer_name, t.customer_address, t.customer_birthday, t.customer_email, current_timestamp);
+MERGE INTO dwh.f_order d
+USING (
+    SELECT DISTINCT 
+        order_id,
+        order_created_date,
+        order_completion_date,
+        order_status,
+        craftsman_id,
+        customer_id,
+        product_id
+    FROM tmp_sources
+) t
+ON d.order_id = t.order_id
+WHEN MATCHED THEN
+    UPDATE SET 
+        order_created_date = t.order_created_date,
+        order_completion_date = t.order_completion_date,
+        order_status = t.order_status,
+        craftsman_id = t.craftsman_id,
+        customer_id = t.customer_id,
+        product_id = t.product_id,
+        load_dttm = current_timestamp
+WHEN NOT MATCHED THEN
+    INSERT (order_id, order_created_date, order_completion_date, order_status, 
+            craftsman_id, customer_id, product_id, load_dttm)
+    VALUES (t.order_id, t.order_created_date, t.order_completion_date, 
+            t.order_status, t.craftsman_id, t.customer_id, t.product_id, current_timestamp);
